@@ -1,0 +1,26 @@
+# Ignore config directory
+config/
+
+# Ignore student database
+data/
+
+# Ignore all files in env directory
+env/
+
+# Ignore logs
+logs/
+
+# Ignore compiled python files
+*.pyc
+
+# Ignore module 3 (In production)
+module3/
+
+# Ignore module 6 (In production)
+module6/
+
+# Ignore __pycache__ directory
+__pycache__/
+
+# Ignore Notes file
+project-notes.md 
