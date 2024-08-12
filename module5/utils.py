@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__) # Create the logger
 logger.setLevel(logging.INFO) # Set the minimum level
 
 LOG_DIRECTORY = "logs" # Define the directory for log file
-LOG_FILENAME = "logs_report.log" # Define the filename
+LOG_FILENAME = "program-logs.log" # Define the filename
 MAX_LOG_SIZE = 1024 * 1024 # 1 MB
 BACKUP_COUNT = 3
 
