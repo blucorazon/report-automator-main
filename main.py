@@ -75,7 +75,6 @@ def main(start_year, end_year, term_number, mode):
           # Update the title of the copied document
           format_document_title(unformatted_report_id, formatted_title)
     logger.info("Reports generated and sorted successfully.")
-    print("Reports generated and sorted successfully.")
 
 if __name__ == "__main__":
     # Record the start time
