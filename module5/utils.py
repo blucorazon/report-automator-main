@@ -11,6 +11,7 @@ def log_run_header():
     start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     header = f"\n\n{separator}\nRun Start: {start_time}\n{separator}\n"
     logger.info(header)
+    return start_time
 
 logger = logging.getLogger(__name__) # Create the logger
 logger.setLevel(logging.INFO) # Set the minimum level
