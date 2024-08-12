@@ -5,7 +5,7 @@ This project is designed to facilitate the report generation process for educato
 APIs. From a database, templates for student reports are created and then organized within a user's
 Google Drive. 
 
-### Video Demo: [<URL>](https://youtu.be/owpr9zTJKWk)
+### [Video Demo](https://youtu.be/owpr9zTJKWk)
 
 ## Technologies and Libraries
 - Python
