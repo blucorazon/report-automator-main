@@ -8,10 +8,7 @@ from module4.database import readSqliteTable
 from module4.database import readTestTable
 from module5.utils import logger
 from module5.utils import log_run_header
-"""
-TODO: 
-- How do we reduce number of API calls?
-"""
+
 def main(start_year, end_year, term_number, mode):
     """ Generate and organize student report templates.
 
@@ -34,6 +31,9 @@ def main(start_year, end_year, term_number, mode):
     Returns:
         None
     """
+    # Record the start time
+    start_time = datetime.now()
+
     # Set header for logging
     log_run_header()
 
@@ -75,11 +75,15 @@ def main(start_year, end_year, term_number, mode):
           # Update the title of the copied document
           format_document_title(unformatted_report_id, formatted_title)
     logger.info("Reports generated and sorted successfully.")
-
-if __name__ == "__main__":
-    # Record the start time
-    start_time = datetime.now()
     
+    # Record the end time
+    end_time = datetime.now()
+    duration = end_time - start_time
+
+    # Log and Print total run time
+    logger.info(f"Total run time: {duration}")
+
+if __name__ == "__main__":    
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description="Generate and organize student report templates.")
     parser.add_argument("start_year", type=int, help="Starting year of the School term")
@@ -94,10 +98,3 @@ if __name__ == "__main__":
     # Main program
     main(args.start_year, args.end_year, args.term_number, args.mode)
 
-    # Record the end time
-    end_time = datetime.now()
-    duration = end_time - start_time
-
-    # Log and Print total run time
-    logger.info(f"Total run time: {duration}")
-    print(f"Total run time: {duration}")
