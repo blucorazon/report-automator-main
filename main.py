@@ -12,7 +12,7 @@ from module5.utils import log_run_header
 def main(start_year, end_year, term_number, mode):
     """ Generate and organize student report templates.
 
-    This function creates and organizes report templates for students 
+    This program creates and organizes report templates for students 
     based on a specified school term and mode of operation. It uses
     a predefined report template, retrieves student data from a SQLite 
     database, and generates individual reports sorted by course folders. 
@@ -31,11 +31,8 @@ def main(start_year, end_year, term_number, mode):
     Returns:
         None
     """
-    # Record the start time
-    start_time = datetime.now()
-
     # Set header for logging
-    log_run_header()
+    start_time = log_run_header()
 
     # Create parent destination for reports
     folder_id = create_destination_folder(start_year, end_year, term_number) # Parent directory for created reports
