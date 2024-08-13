@@ -1,6 +1,6 @@
 import argparse
 from datetime import datetime
-import module2.drive_api as drive_api
+from module2.drive_api import GoogleDriveManager
 import module4.database as database
 import module5.utils as utils
 
@@ -26,10 +26,17 @@ def main(start_year, end_year, term_number, mode):
     Returns:
         None
     """
-    start_time = utils.log_run_header() # Set header for logging
+    start_time = datetime.now()
+    utils.log_run_header() # Set header for logging
+
+    # Define the parent folder ID where the main destination folder will be created
+    PARENT_FOLDER_ID = "1jZ-d76K-h2nvYGIwHjlsj6fnPJ_c17WZ"
+
+    # Create an instance of GoogleDriveManager
+    drive_manager = GoogleDriveManager(PARENT_FOLDER_ID)
 
     # Create parent destination for reports
-    folder_id = drive_api.create_destination_folder(start_year, end_year, term_number) # Parent directory for created reports
+    folder_id = drive_manager.create_destination_folder(start_year, end_year, term_number) # Parent directory for created reports
     source_file_id = "1mu6gW8FvtZ1xg6u9Is1BSJVlbF0UUqL_LZcOq2Z8ALc" # Location of report template in Google Drive
 
     # Retrieve student data from database
@@ -51,17 +58,18 @@ def main(start_year, end_year, term_number, mode):
 
             # If it doesn't exist, create it and store the ID
             if not course_folder_id:
-                course_folder_id = drive_api.create_course_folder(course_name, folder_id)
+                course_folder_id = drive_manager.create_course_folder(course_name, folder_id)
                 course_folders[course_name] = course_folder_id
                 utils.logger.info(f"Folder: '{course_name}' successfully created in parent directory.")
 
             # Copy the template for current student
             utils.logger.debug("# Copying the template for current student")
-            unformatted_report_id = drive_api.copy_template(course_folder_id, source_file_id)
+            unformatted_report_id = drive_manager.copy_template(course_folder_id, source_file_id)
 
             # Format the new title
             formatted_title = f"{last_name}, {first_name} ({course_name})"
-            drive_api.format_document_title(unformatted_report_id, formatted_title)
+            drive_manager.format_document_title(unformatted_report_id, formatted_title)
+    
     utils.logger.info("Reports generated and sorted successfully.")
     
     # Record the end time
