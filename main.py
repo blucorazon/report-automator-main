@@ -40,6 +40,8 @@ def main(start_year, end_year, term_number, mode):
     folder_id = drive_manager.create_destination_folder(start_year, end_year, term_number) # Parent directory for created reports
     source_file_id = "1mu6gW8FvtZ1xg6u9Is1BSJVlbF0UUqL_LZcOq2Z8ALc" # Location of report template in Google Drive
 
+    # TODO: Create an instance of DatabaseManager
+    
     # Retrieve student data from database
     utils.logger.debug("# Retreiving student data from database")
     if mode == "test":
