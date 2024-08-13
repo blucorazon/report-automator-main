@@ -68,18 +68,28 @@ def authenticate():
                     logger.error(f"Failed to refresh access token. Error: {e}")
                     raise
                 raise Exception("Failed to refresh access token after multiple attempts.")
-        
         else:
-            # Initialize the OAuth 2.0 flow using client secrets from the JSON file, specifying the required scopes
-            flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_FILE,SCOPES)
-            # Send users to Google's auth 2.0 server
-            credentials = flow.run_local_server(
-                host='localhost',
-                port=8080, 
-                authorization_prompt_message='Please visit this URL: {url}', 
-                success_message='The auth flow is complete; you may close this window.',
-                open_browser=True
-            )
+            try:
+                # Initialize the OAuth 2.0 flow using client secrets from the JSON file, specifying the required scopes
+                flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_FILE,SCOPES)
+            except FileNotFoundError:
+                logger.error(f"File not found: {CREDENTIALS_FILE}")
+                return None
+            except Exception as e:
+                logger.error(f"Unexpected error during OAuth flow initialization: {e}")
+                return None
+            else:
+                # Send users to Google's auth 2.0 server
+                credentials = flow.run_local_server(
+                    host='localhost',
+                    port=8080, 
+                    authorization_prompt_message='Please visit this URL: {url}', 
+                    success_message='The auth flow is complete; you may close this window.',
+                    open_browser=True
+                )
+                if credentials is None:
+                    logger.error("Failed to obtain credentials.")
+                    return None
         save_credentials(credentials)
     logger.debug("Oauth authentication successful.")    
     return credentials
