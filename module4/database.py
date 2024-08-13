@@ -3,122 +3,110 @@ from module5.utils import logger
 
 """ 
 TODO: 
+[x] Refactor into class structure / Confirm that all functions work still
+[ ] Add logging
+[ ] Refactor again into ConnectionManager and QueryManager 
+[ ] Create queries that will enable more rapid management in between terms
 """
-def readTestTable():
-    """
-    Executes a predefined SQL query to retrieve data from the database for testing.
-    The query is executed against the SQLite database, and returns the 
-    last name, first name, and course name of selected students from the first course. 
-
-    The results are returned as a list of tuples, each tuple representing 
-    a row from the query result. This data can be used to format the titles of
-    report templates for any given batch. 
-
-    The function targets only one course for testing purposes.
-    """
-    logger.debug("readTestTable():")
-    try:
-        # Connect to database and create cursor
-        logger.debug("# Connect to database and create cursor")
-        connection = sqlite3.connect("data/roster.db")
-        cursor = connection.cursor()
-
-        # Get the ID of the first course
-        logger.debug("# Get the ID of the first course")
-        cursor.execute("SELECT id FROM courses ORDER BY id LIMIT 1")
-        first_course_id = cursor.fetchone()[0]
-
-        # Query returns last name, first name, and course name for a single course
-        sqlite_select_query = """
-        SELECT last_name, first_name, courses.name as course_name
-        FROM students
-        JOIN enrollments ON students.id = enrollments.student_id
-        JOIN courses ON enrollments.course_id = courses.id
-        WHERE courses.id = ?
-        ORDER BY courses.id
+class DatabaseManager:
+    def __init__(self, db_path):
         """
+        Initialize the DatabaseManager with the path to the student database.
 
-        # Run query that reads data from database
-        logger.debug("# Run query that reads data from database")
-        cursor.execute(sqlite_select_query, (first_course_id,))
+        This constructor sets up the DatabaseManager instance by connecting to the 
+        SQLite database with the provided file path and creating a cursor.
 
-        # Read the query result into variable
-        logger.debug("# Read the query result into variable")
-        record = cursor.fetchall()
+        Args:
+            db_path (str): The file path of the SQLite database
+        """
+        self.db_path = db_path
+        self.connection = None
+        self.cursor = None
     
-    except sqlite3.Error as error:
-        logger.error(f"Error while connecting to SQLite3: {error}")
-        return None, None, None 
+    def connect(self):
+        """
+        Establish a connection to the SQLite database and return a cursor object.
 
-    finally:
+        Returns:
+            self.cursor: A cursor object that will be used to interface with the database
+        
+        """
+        try:
+            self.connection = sqlite3.connect(self.db_path)
+            self.cursor = self.connection.cursor()
+            return self.cursor
+        except sqlite3.Error as error:
+            logger.error(f"Error while connecting to SQLite3: {error}")
+            return None
+    
+    def close_and_disconnect(self):
+        """Close out a SQLite connection properly by closing the cursor and the connection"""
+        if self.cursor:
+            self.cursor.close()
+        if self.connection:
+            self.connection.close()
+
+    def execute_query(self, query, params=None):
+        """
+        Execute a given SQL query and return the results.
+
+        Args:
+            query (str): The SQL query to execute.
+            params(tuple): Optional parameters to pass with the query.
+
+        Returns:
+            list: The results of the query
+        """
+        cursor = self.connect()
         if cursor:
-            # Close the cursor after using:
-            logger.debug("# Close the cursor after using")
-            cursor.close()
-        if connection:
-            # Close the connection after using
-            logger.debug("# Close the connection after using")
-            connection.close()
-            logger.debug("SQLite connection closed successfully.")
-        if record:
-            return record
-        else:
-            logger.error("Error. Data not returned in variable 'record'")
-            return None, None, None
+            try:
+                if params:
+                    cursor.execute(query, params)
+                else:
+                    cursor.execute(query)
+                results = cursor.fetchall()
+            except sqlite3.Error as error:
+                logger.error(f"Error while connecting to SQLite3: {error}")
+                return None
+            finally:
+                self.close_and_disconnect()
+                return results
 
+    def select_all_students(self):
+        """
+        Select all student data from the database and orders them by 
+        Course ID. The student names are formatted as follows:
+        'Last, First (CourseName)'
 
-def readSqliteTable():
-    """ Executes a predefined SQL query to retrieve data from the database.
-    The query is executed against the SQLite database, and returns the 
-    last name, first name, and course names of selected students. 
-    
-    The results are returned as a list of tuples, each tuple representing 
-    a row from the query result. This data can be used to format the titles of
-    report templates for any given batch. 
-
-    Add a WHERE keyword when particular courses are needed. Fall and Spring terms
-    require more reports, so this keyword will pare results down. 
-    """
-    logger.debug("readSqliteTable():")
-    try:
-        # Connect to database and create cursor
-        logger.debug("# Connect to database and create cursor")
-        connection = sqlite3.connect("data/roster.db")
-        cursor = connection.cursor()
-
-        # Query returns last name, first name, and course name
-        sqlite_select_query = """ 
+        Use this method when student reports need to be generated for every
+        student on roster, including LS and MS.
+        
+        Returns:
+            list: The results of the selection.
+        """
+        query =""" 
         SELECT last_name, first_name, courses.name as course_name
         FROM students
         JOIN enrollments ON students.id = enrollments.student_id
         JOIN courses ON enrollments.course_id = courses.id 
         ORDER BY courses.id;
         """
-        # Run query that reads data from database
-        logger.debug("# Run query that reads data from database")
-        cursor.execute(sqlite_select_query)
+        return self.execute_query(query)
 
-        # Read the query result into variable
-        logger.debug("# Read the query result into variable")
-        record = cursor.fetchall()
-    
-    except sqlite3.Error as error:
-        logger.error(f"Error while connecting to SQLite3: {error}")
-        return None, None, None
-    
-    finally:
-        if cursor: 
-            # Close the cursor after using
-            logger.debug("# Close the cursor after using")
-            cursor.close()
-        if connection:
-            # Close the connection after using
-            connection.close() 
-            logger.debug("# Close the connection after using")
-            logger.debug("SQLite connection closed successfully.")
-        if record:
-            # Return query result
-            return record
-        else: 
-            logger.error("Error. Data not returned in variable 'record'")
-            return None, None, None
+    def select_students_test(self):
+        """
+        Select a small subset of student data to use as a test use this method when 
+        testing changes or any time a short test of functionality is needed.
+
+        Returns:
+            list: The results of the selection
+        """
+        query="""
+        SELECT last_name, first_name, courses.name as course_name
+        FROM students
+        JOIN enrollments ON students.id = enrollments.student_id
+        JOIN courses ON enrollments.course_id = courses.id 
+        ORDER BY courses.id
+        LIMIT 10;
+        """
+        return self.execute_query(query)
