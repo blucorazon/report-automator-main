@@ -5,17 +5,6 @@ from module1.auth import authenticate
 from module5.utils import logger
 import time
 
-"""TODO:
-Google Drive Functions:
-[x] Create destination folder for all reports in batch
-[ ] Create folders for each course in batch 
-[x] Create report template copy
-[x] Format template copy
-- Error handling
-    [ ] create_destination_folder
-    [ ] copy_template
-
-"""
 class GoogleDriveManager:
     def __init__(self, parent_folder_id):
         """
