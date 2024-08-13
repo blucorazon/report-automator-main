@@ -2,7 +2,6 @@ import argparse
 from datetime import datetime
 from module2.drive_api import GoogleDriveManager
 from module4.database import DatabaseManager
-import module4.database as database
 import module5.utils as utils
 
 def main(start_year, end_year, term_number, mode):
@@ -48,7 +47,7 @@ def main(start_year, end_year, term_number, mode):
     if mode == "test":
         students_data = db_manager.select_students_test()
     else:
-        students_data = database.readSqliteTable()
+        students_data = db_manager.select_all_students()
     
     # Create a dictionary to track course folders
     utils.logger.debug("# Creating a dictionary to track course folders")
