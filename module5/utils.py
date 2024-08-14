@@ -16,8 +16,9 @@ def log_run_header():
 logger = logging.getLogger(__name__) # Create the logger
 logger.setLevel(logging.INFO) # Set the minimum level
 
-LOG_DIRECTORY = "logs" # Define the directory for log file
-LOG_FILENAME = "program-logs.log" # Define the filename
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+LOG_DIRECTORY = os.path.join(BASE_DIR, "logs") # Define the directory for log file
+LOG_FILENAME = "report-maker-logs.log" # Define the filename
 MAX_LOG_SIZE = 1024 * 1024 # 1 MB
 BACKUP_COUNT = 3
 
