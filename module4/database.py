@@ -1,5 +1,5 @@
 import sqlite3
-from module5.utils import logger
+import module5.utils as utils
 
 """ 
 TODO: 
@@ -23,7 +23,7 @@ class DatabaseManager:
         self.connection = None
         self.cursor = None
     
-    def connect(self):
+    def establish_connection(self):
         """
         Establish a connection to the SQLite database and return a cursor object.
 
@@ -32,19 +32,23 @@ class DatabaseManager:
         
         """
         try:
+            utils.logger.debug("# Calling establish_connection(): ")
             self.connection = sqlite3.connect(self.db_path)
             self.cursor = self.connection.cursor()
+            utils.logger.debug("# SQLite connection established and cursor created")
             return self.cursor
         except sqlite3.Error as error:
-            logger.error(f"Error while connecting to SQLite3: {error}")
+            utils.logger.error(f"Error while connecting to SQLite3: {error}")
             return None
     
     def close_and_disconnect(self):
         """Close out a SQLite connection properly by closing the cursor and the connection"""
+        utils.logger.debug("# Calling close_and_disconnect():")
         if self.cursor:
             self.cursor.close()
         if self.connection:
             self.connection.close()
+        utils.logger.debug("# SQLite connection and cursor object closed successfully")
 
     def execute_query(self, query, params=None):
         """
@@ -57,7 +61,8 @@ class DatabaseManager:
         Returns:
             list: The results of the query
         """
-        cursor = self.connect()
+        utils.logger.debug("# Calling execute_query():")
+        cursor = self.establish_connection()
         if cursor:
             try:
                 if params:
@@ -66,10 +71,11 @@ class DatabaseManager:
                     cursor.execute(query)
                 results = cursor.fetchall()
             except sqlite3.Error as error:
-                logger.error(f"Error while connecting to SQLite3: {error}")
+                utils.logger.error(f"Error while connecting to SQLite3: {error}")
                 return None
             finally:
                 self.close_and_disconnect()
+                utils.logger.debug("# SQL query executed successfully.")
                 return results
 
     def select_all_students(self):
@@ -91,6 +97,7 @@ class DatabaseManager:
         JOIN courses ON enrollments.course_id = courses.id 
         ORDER BY courses.id;
         """
+        utils.logger.debug("# Calling select_all_students():")
         return self.execute_query(query)
 
     def select_students_test(self):
@@ -109,4 +116,41 @@ class DatabaseManager:
         ORDER BY courses.id
         LIMIT 10;
         """
+        utils.logger.debug("# Calling select_students_test():")
         return self.execute_query(query)
+    
+class TermTransitionManager:
+    def __init__(self, db_manager):
+        """
+        Initialize the TermTransitionManager with an instance of DatabaseManager and
+        establish a connection with the database.
+
+        Args:
+            db_manager (DatabaseManager): The instance of the DatabaseManager to use 
+                                          for database operations.
+        """
+        self.db_manager = db_manager
+        if self.db_manager.connection is None:
+            self.db_manager.establish_connection()
+        self.connection = self.db_manager.connection
+
+    def backup_database(self, backup_path):
+        """
+        Create a backup of the database before making any term transition changes.
+
+        Args:
+            backup_path (str): The file path where the backup will be saved.
+        """
+        try:
+            with sqlite3.connect(backup_path) as backup_conn:
+                self.connection.backup(backup_conn)
+            utils.logger.info(f"Database backup successfully created at {backup_path}")
+        except sqlite3.Error as error:
+            utils.logger.error(f"Error while creating database backup: {error}")
+
+    # TODO: Methods for Term Transitioning
+        # Backup
+        # Delete from database (aka graduate old students)
+        # Delete from enrollments (aka the term has finished)
+        # Insert into database (aka admit new students)
+        # Update enrollments table (aka enroll in new electives)
