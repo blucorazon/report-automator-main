@@ -1,4 +1,6 @@
+import os
 import sqlite3
+from datetime import datetime
 import module5.utils as utils
 
 """ 
@@ -132,25 +134,80 @@ class TermTransitionManager:
         self.db_manager = db_manager
         if self.db_manager.connection is None:
             self.db_manager.establish_connection()
+        
+        if self.db_manager.connection is None:
+            raise ConnectionError("Failed to establish connection to SQLite database")
+        
         self.connection = self.db_manager.connection
 
-    def backup_database(self, backup_path):
+    def backup_database(self, backup_dir):
         """
         Create a backup of the database before making any term transition changes.
 
         Args:
-            backup_path (str): The file path where the backup will be saved.
+            backup_dir(str): The directory where the backup will be saved.
+        
+        Returns:
+            BACKUP_PATH (str): The path to the newly created database backup.
         """
+        # Ensure the backup directory exists
+        os.makedirs(backup_dir, exist_ok=True)
+       
+        # Format timestamp of backup filename
+        timestamp = datetime.now().strftime("%Y-%m%d_%H-%M-%S")
+        backup_filename = f"backup-roster--{timestamp}.db"
+        BACKUP_PATH = os.path.join(backup_dir, backup_filename)
+        
         try:
-            with sqlite3.connect(backup_path) as backup_conn:
-                self.connection.backup(backup_conn)
-            utils.logger.info(f"Database backup successfully created at {backup_path}")
+            dst = sqlite3.connect(BACKUP_PATH)
+        
+            with dst:
+                if self.db_manager.connection:
+                    self.db_manager.connection.backup(dst, pages=-1, name='main', sleep=0.250)
+                else:
+                    utils.logger.error("No active database connection for backup")
+                    return None
+            utils.logger.info(f"Database successfully backed up to: {BACKUP_PATH}")
+            
         except sqlite3.Error as error:
-            utils.logger.error(f"Error while creating database backup: {error}")
+            utils.logger.error(f"Error during backup: {error}")
+            return None
+        
+        finally:
+            dst.close()
+        
+        return BACKUP_PATH
 
-    # TODO: Methods for Term Transitioning
-        # Backup
-        # Delete from database (aka graduate old students)
-        # Delete from enrollments (aka the term has finished)
-        # Insert into database (aka admit new students)
-        # Update enrollments table (aka enroll in new electives)
+    def delete_from_database(self):
+        """
+        Delete all students from the database who are in a specific year.
+        Use this method when "graduating" students at the end of their eigth grade year.
+        """
+        # Find the smallest year (oldest graduating class)
+        smallest_year_query = "SELECT MIN(year) FROM students;"
+        result = self.db_manager.execute_query(smallest_year_query)
+        smallest_year = result[0][0]
+
+        # Delete the students
+        delete_students_query="DELETE FROM students WHERE year = ?;"
+        self.db_manager.execute_query(delete_students_query, (smallest_year,))
+
+        utils.logger.info(f"Successfully deleted all students from the database from the Class of {smallest_year}")
+
+
+# TODO: Methods for Term Transitioning
+# Delete from database (aka graduate old students)
+# Delete from enrollments (aka the term has finished)
+# Insert into database (aka admit new students)
+# Update enrollments table (aka enroll in new electives)
+
+# Create an instance of DatabaseManager and TermTransitionManager
+BACKUP_DIR = '/home/blu/vs-code/report-automator-main/backups'
+db_manager = DatabaseManager('/home/blu/vs-code/report-automator-main/data/roster.db')
+db_manager.establish_connection()
+
+transition_manager = TermTransitionManager(db_manager)
+backup_path = transition_manager.backup_database(BACKUP_DIR)
+db_manager.close_and_disconnect()
+
+print(f"Backup successfully created: {backup_path}")
