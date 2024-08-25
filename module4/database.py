@@ -54,7 +54,8 @@ class DatabaseManager:
 
     def execute_query(self, query, params=None):
         """
-        Execute a given SQL query and return the results.
+        Execute a given SQL query and return the results. Automatically commits if the query
+        is a write operateion (INSERT, UPDATE, DELETE).
 
         Args:
             query (str): The SQL query to execute.
@@ -71,7 +72,13 @@ class DatabaseManager:
                     cursor.execute(query, params)
                 else:
                     cursor.execute(query)
+
+                # Automatically commit if the query modifies the database
+                if query.strip().upper().startswith(("INSERT", "UPDATE", "DELETE")):
+                    self.connection.commit()
+
                 results = cursor.fetchall()
+            
             except sqlite3.Error as error:
                 utils.logger.error(f"Error while connecting to SQLite3: {error}")
                 return None
@@ -178,6 +185,35 @@ class TermTransitionManager:
         
         return BACKUP_PATH
 
+
+    def insert_into_database(self, new_students):
+        """
+        Insert (e.g - enroll) new students into the database.
+
+        Args:
+            new_students(list): A list of dictionaries, where each dictionary contains the
+            student's first name, last name and graduation year. 
+        """
+        insert_query="""
+        INSERT INTO students (first_name, last_name, year)
+        VALUES (:first_name, :last_name, :year);
+        """
+        utils.logger.debug("# Calling insert_into_database():")
+
+        try:
+            cursor = self.connection.cursor()
+            cursor.executemany(insert_query, new_students)
+            self.connection.commit()
+            utils.logger.info(f"Successfully inserted {cursor.rowcount} studnets into database.")
+        except sqlite3.Error as error:
+            self.db_manager.connection.rollback()
+            utils.logger.error(f"Error inserting students: {error}")
+            raise
+        finally: 
+            cursor.close()
+            utils.logger.info("Students succesfully inserted into database")
+
+
     def delete_from_database(self):
         """
         Delete all students from the database who are in a specific year.
@@ -186,28 +222,43 @@ class TermTransitionManager:
         # Find the smallest year (oldest graduating class)
         smallest_year_query = "SELECT MIN(year) FROM students;"
         result = self.db_manager.execute_query(smallest_year_query)
-        smallest_year = result[0][0]
+        
+        if result:
+            smallest_year = result[0][0]
+            utils.logger.debug(f"Smallest year identified: {smallest_year}")
 
-        # Delete the students
-        delete_students_query="DELETE FROM students WHERE year = ?;"
-        self.db_manager.execute_query(delete_students_query, (smallest_year,))
+            # Delete the students
+            delete_students_query="DELETE FROM students WHERE year = ?;"
+            self.db_manager.execute_query(delete_students_query, (smallest_year,))
 
-        utils.logger.info(f"Successfully deleted all students from the database from the Class of {smallest_year}")
+            remaining_students = self.db_manager.execute_query("SELECT * FROM students WHERE year = ?", (smallest_year,))
+
+            if remaining_students:
+                utils.logger.warning(f"Students still remain in detabase for class of {smallest_year}")
+            else:                                                      
+                utils.logger.info(f"Successfully deleted all students from the database from the Class of {smallest_year}")
+        else:
+            utils.logger.warning("No students found to delete.")
+
+    def delete_from_enrollments(self):
+        """
+        Delete students
+        """
 
 
 # TODO: Methods for Term Transitioning
-# Delete from database (aka graduate old students)
 # Delete from enrollments (aka the term has finished)
 # Insert into database (aka admit new students)
 # Update enrollments table (aka enroll in new electives)
 
 # Create an instance of DatabaseManager and TermTransitionManager
 BACKUP_DIR = '/home/blu/vs-code/report-automator-main/backups'
-db_manager = DatabaseManager('/home/blu/vs-code/report-automator-main/data/roster.db')
-db_manager.establish_connection()
-
+db_manager = DatabaseManager('/home/blu/vs-code/report-automator-main/backups/backup-roster--2024-0824_21-58-40.db')
 transition_manager = TermTransitionManager(db_manager)
-backup_path = transition_manager.backup_database(BACKUP_DIR)
-db_manager.close_and_disconnect()
 
-print(f"Backup successfully created: {backup_path}")
+
+new_students = [
+    {"first_name": "Alice", "last_name": "Johnson", "year": 2025}
+]
+
+transition_manager.insert_into_database(new_students)
