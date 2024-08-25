@@ -21,3 +21,8 @@ __pycache__/
 
 # Ignore pytest cache
 .pytest_cache/
+
+# Ignore backups directory
+backups/
+
+tests/
