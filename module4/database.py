@@ -240,11 +240,6 @@ class TermTransitionManager:
         else:
             utils.logger.warning("No students found to delete.")
 
-    def delete_from_enrollments(self):
-        """
-        Delete students
-        """
-
 
 # TODO: Methods for Term Transitioning
 # Delete from enrollments (aka the term has finished)
