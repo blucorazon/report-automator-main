@@ -235,15 +235,3 @@ class TermTransitionManager:
 # TODO: Methods for Term Transitioning
 # Delete from enrollments (aka the term has finished)
 # Update enrollments table (aka enroll in new electives)
-
-# Create an instance of DatabaseManager and TermTransitionManager
-BACKUP_DIR = '/home/blu/vs-code/report-automator-main/backups'
-db_manager = DatabaseManager('/home/blu/vs-code/report-automator-main/backups/backup-roster--2024-0824_21-58-40.db')
-transition_manager = TermTransitionManager(db_manager)
-
-
-new_students = [
-    {"first_name": "Alice", "last_name": "Johnson", "year": 2025}
-]
-
-transition_manager.insert_into_database(new_students)
