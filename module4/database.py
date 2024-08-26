@@ -3,13 +3,6 @@ import sqlite3
 from datetime import datetime
 import module5.utils as utils
 
-""" 
-TODO: 
-[x] Refactor into class structure / Confirm that all functions work still
-[ ] Add logging
-[ ] Refactor again into ConnectionManager and QueryManager 
-[ ] Create queries that will enable more rapid management in between terms
-"""
 class DatabaseManager:
     def __init__(self, db_path):
         """
@@ -185,8 +178,7 @@ class TermTransitionManager:
         
         return BACKUP_PATH
 
-
-    def insert_into_database(self, new_students):
+    def enroll_new_students(self, new_students):
         """
         Insert (e.g - enroll) new students into the database.
 
@@ -214,7 +206,7 @@ class TermTransitionManager:
             utils.logger.info("Students succesfully inserted into database")
 
 
-    def delete_from_database(self):
+    def delete_graduating_class(self):
         """
         Delete all students from the database who are in a specific year.
         Use this method when "graduating" students at the end of their eigth grade year.
@@ -240,10 +232,8 @@ class TermTransitionManager:
         else:
             utils.logger.warning("No students found to delete.")
 
-
 # TODO: Methods for Term Transitioning
 # Delete from enrollments (aka the term has finished)
-# Insert into database (aka admit new students)
 # Update enrollments table (aka enroll in new electives)
 
 # Create an instance of DatabaseManager and TermTransitionManager
