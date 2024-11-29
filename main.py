@@ -93,4 +93,3 @@ if __name__ == "__main__":
 
     # Main program
     main(args.start_year, args.end_year, args.term_number, args.mode)
-
