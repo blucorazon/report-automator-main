@@ -14,7 +14,7 @@ def log_run_header():
     return start_time
 
 logger = logging.getLogger(__name__) # Create the logger
-logger.setLevel(logging.DEBUG) # Set the minimum level
+logger.setLevel(logging.INFO) # Set the minimum level
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 LOG_DIRECTORY = os.path.join(BASE_DIR, "logs") # Define the directory for log file
