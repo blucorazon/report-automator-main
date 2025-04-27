@@ -190,21 +190,44 @@ class TermTransitionManager:
         INSERT INTO students (first_name, last_name, year)
         VALUES (:first_name, :last_name, :year);
         """
-        utils.logger.debug("# Calling insert_into_database():")
+        utils.logger.debug("# Calling enroll_new_students():")
 
         try:
             cursor = self.connection.cursor()
             cursor.executemany(insert_query, new_students)
             self.connection.commit()
-            utils.logger.info(f"Successfully inserted {cursor.rowcount} studnets into database.")
+            utils.logger.info(f"Successfully inserted {cursor.rowcount} students into database.")
         except sqlite3.Error as error:
             self.db_manager.connection.rollback()
             utils.logger.error(f"Error inserting students: {error}")
             raise
         finally: 
             cursor.close()
-            utils.logger.info("Students succesfully inserted into database")
 
+    def delete_current_students(self, deleted_students):
+        """
+        Delete students from the database.
+
+        Args:
+            deleted_students(list): A list of dictionaries, where each dictionary contains
+            the student's first name, last name, and graduation year.
+        """
+        delete_query ="""
+        DELETE FROM students
+        WHERE first_name = :first_name AND last_name = :last_name AND year = :year;
+        """
+        utils.logger.debug("# Calling delete_current_students():")
+        try:
+            cursor = self.connection.cursor()
+            cursor.executemany(delete_query, deleted_students)
+            self.connection.commit()
+            utils.logger.info(f"Successfully deleted {cursor.rowcount} students from database.")
+        except sqlite3.Error as error:
+            self.db_manager.connection.rollback()
+            utils.logger.error(f"Error inserting students: {error}")
+            raise
+        finally:
+            cursor.close()
 
     def delete_graduating_class(self):
         """
@@ -235,3 +258,23 @@ class TermTransitionManager:
 # TODO: Methods for Term Transitioning
 # Delete from enrollments (aka the term has finished)
 # Update enrollments table (aka enroll in new electives)
+
+enrolled_students_test = [{"first_name": "Alice", "last_name": "Smith", "year": 1999},
+                          {"first_name": "Bob", "last_name": "Davis", "year": 1999}]
+
+# Create instance of db_manager
+db_manager = DatabaseManager('../data/roster.db')
+transition_manager = TermTransitionManager(db_manager)
+
+# Enroll new students
+transition_manager.enroll_new_students(enrolled_students_test)
+
+print(f"The following students have been added to the database: {enrolled_students_test}")
+print("--Running #delete_students():")
+
+deleted_students_test = [{"first_name": "Alice", "last_name": "Smith", "year": 1999},
+                        {"first_name": "Bob", "last_name": "Davis", "year": 1999}]
+# Delete current students
+transition_manager.delete_current_students(deleted_students_test)
+
+print(f"The following students were deleted: {deleted_students_test}")
